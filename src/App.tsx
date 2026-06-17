@@ -4,8 +4,6 @@ import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import HeroCard from './components/HeroCard';
-import RecentDeposits from './components/RecentDeposits';
-import AssetsCard from './components/AssetsCard';
 import TopCoinsTable from './components/TopCoinsTable';
 import StatsStrip from './components/StatsStrip';
 import TopMovers from './components/TopMovers';
@@ -16,7 +14,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg text-white relative overflow-hidden">
       
-      {/* 🌌 BACKGROUND EFFECTS */}
+      {/* 🌌 BACKGROUND */}
       <div className="pointer-events-none fixed inset-0 bg-grid" />
       <div className="pointer-events-none fixed -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-cyan-500/10 blur-[120px]" />
       <div className="pointer-events-none fixed -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-purple-500/10 blur-[120px]" />
@@ -24,36 +22,53 @@ export default function App() {
 
       <div className="relative flex min-h-screen">
         
-        {/* 🔵 SIDEBAR */}
+        {/* SIDEBAR */}
         <Sidebar active={active} onChange={setActive} />
 
-        {/* 🟢 MAIN CONTENT */}
+        {/* MAIN */}
         <main className="flex-1 min-w-0 px-4 lg:px-8 pb-10">
           
+          {/* HEADER + STATS */}
           <Header />
           <StatsStrip />
 
-          {/* 🚀 HERO + MOVERS SECTION */}
+          {/* 🔥 MAIN GRID */}
           <div className="mt-5 grid grid-cols-1 xl:grid-cols-3 gap-5">
             
             {/* LEFT SIDE */}
             <div className="xl:col-span-2 flex flex-col gap-5">
+              
               <HeroCard />
 
-              {/* 🔥 NEW: TOP MOVERS HERE */}
+              {/* TOP MOVERS */}
               <TopMovers />
+
+              {/* TABLE */}
+              <TopCoinsTable />
             </div>
 
-            {/* RIGHT SIDE */}
+            {/* RIGHT SIDE (EMPTY MAT CHHOD — FUTURE READY) */}
             <div className="flex flex-col gap-5">
-              <RecentDeposits />
-              <AssetsCard />
-            </div>
-          </div>
+              
+              {/* 🔥 PLACEHOLDER CARD (Premium feel ke liye) */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+                <h2 className="text-sm font-semibold text-white/70 mb-2">
+                  Coming Soon 🚀
+                </h2>
+                <p className="text-xs text-white/40">
+                  Portfolio tracking, Watchlist, Alerts & AI insights yahan aayenge.
+                </p>
+              </div>
 
-          {/* 📊 TABLE SECTION (FULL WIDTH) */}
-          <div className="mt-5">
-            <TopCoinsTable />
+              {/* 🔥 EXTRA SPACE BALANCE */}
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 p-5">
+                <p className="text-xs text-white/50">
+                  Tip: Coins pe click karke detailed analytics open kar sakta hai.
+                </p>
+              </div>
+
+            </div>
+
           </div>
 
           {/* FOOTER */}
