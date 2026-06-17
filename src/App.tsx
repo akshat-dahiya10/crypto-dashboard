@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import HeroCard from './components/HeroCard';
 import TopCoinsTable from './components/TopCoinsTable';
 import StatsStrip from './components/StatsStrip';
 import TopMovers from './components/TopMovers';
+import TopGainerChart from './components/TopGainerChart';
 
 export default function App() {
   const [active, setActive] = useState('dashboard');
@@ -22,13 +22,12 @@ export default function App() {
 
       <div className="relative flex min-h-screen">
         
-        {/* SIDEBAR */}
+        {/* 🔵 SIDEBAR */}
         <Sidebar active={active} onChange={setActive} />
 
-        {/* MAIN */}
+        {/* 🟢 MAIN */}
         <main className="flex-1 min-w-0 px-4 lg:px-8 pb-10">
           
-          {/* HEADER + STATS */}
           <Header />
           <StatsStrip />
 
@@ -38,19 +37,20 @@ export default function App() {
             {/* LEFT SIDE */}
             <div className="xl:col-span-2 flex flex-col gap-5">
               
-              <HeroCard />
+              {/* 🚀 NEW: TOP GAINER CHART */}
+              <TopGainerChart />
 
-              {/* TOP MOVERS */}
+              {/* 📊 TOP MOVERS */}
               <TopMovers />
 
-              {/* TABLE */}
+              {/* 📈 COINS TABLE */}
               <TopCoinsTable />
             </div>
 
-            {/* RIGHT SIDE (EMPTY MAT CHHOD — FUTURE READY) */}
+            {/* RIGHT SIDE (balanced UI ke liye) */}
             <div className="flex flex-col gap-5">
               
-              {/* 🔥 PLACEHOLDER CARD (Premium feel ke liye) */}
+              {/* Coming Soon Card */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
                 <h2 className="text-sm font-semibold text-white/70 mb-2">
                   Coming Soon 🚀
@@ -60,7 +60,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 🔥 EXTRA SPACE BALANCE */}
+              {/* Tip Card */}
               <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 p-5">
                 <p className="text-xs text-white/50">
                   Tip: Coins pe click karke detailed analytics open kar sakta hai.
