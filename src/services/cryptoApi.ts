@@ -1,58 +1,17 @@
-// ✅ NO axios (build safe)
-// ✅ named exports (important)
-
-export const getTopGainer = async () => {
+export const fetchCoins = async () => {
   try {
     const res = await fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc'
+      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1"
     );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch data");
+    }
 
     const data = await res.json();
-
-    return data[0];
-  } catch (err) {
-    console.log('Top gainer error:', err);
-    return null;
-  }
-};
-
-export const getCoinById = async (id: string) => {
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${id}`
-    );
-
-    return await res.json();
-  } catch (err) {
-    console.log('Coin fetch error:', err);
-    return null;
-  }
-};
-
-export const searchCoins = async (query: string) => {
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/search?query=${query}`
-    );
-
-    const data = await res.json();
-
-    return data.coins || [];
-  } catch (err) {
-    console.log('Search error:', err);
+    return data;
+  } catch (error) {
+    console.error("API ERROR:", error);
     return [];
-  }
-};
-
-export const getMarketChart = async (id: string) => {
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=7`
-    );
-
-    return await res.json();
-  } catch (err) {
-    console.log('Chart error:', err);
-    return null;
   }
 };
