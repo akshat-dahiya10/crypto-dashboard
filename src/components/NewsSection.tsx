@@ -9,12 +9,20 @@ export default function NewsSection() {
   const fetchNews = async () => {
     try {
       const res = await fetch(
-        'https://api.coingecko.com/api/v3/news'
+        'https://api.allorigins.win/get?url=https://cointelegraph.com/rss'
       );
 
       const data = await res.json();
 
-      setNews(data.data || []);
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(data.contents, 'text/xml');
+
+      const items = Array.from(xml.querySelectorAll('item')).map((item) => ({
+        title: item.querySelector('title')?.textContent,
+        link: item.querySelector('link')?.textContent,
+      }));
+
+      setNews(items);
     } catch (err) {
       console.log(err);
       setError(true);
@@ -26,30 +34,25 @@ export default function NewsSection() {
   }, []);
 
   if (error) {
-    return (
-      <p className="text-red-400">
-        ❌ Unable to load news (API error)
-      </p>
-    );
+    return <p className="text-red-400">❌ Unable to load news</p>;
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">📰 News & Sentiment</h2>
-
-      {news.slice(0, 5).map((item, i) => (
-        <a
-          key={i}
-          href={item.url}
-          target="_blank"
-          className="block p-3 bg-gray-800 rounded hover:bg-gray-700"
-        >
-          <p className="font-semibold">{item.title}</p>
-          <p className="text-sm text-gray-400">
-            {item.source}
-          </p>
-        </a>
-      ))}
+      {news.length === 0 ? (
+        <p className="text-gray-400">Loading news...</p>
+      ) : (
+        news.slice(0, 6).map((item, i) => (
+          <a
+            key={i}
+            href={item.link}
+            target="_blank"
+            className="block p-3 bg-gray-800 rounded hover:bg-gray-700"
+          >
+            <p className="font-semibold">{item.title}</p>
+          </a>
+        ))
+      )}
     </div>
   );
 }
