@@ -32,13 +32,13 @@ export default function App() {
                     Coming Soon 🚀
                   </h2>
                   <p className="text-xs text-white/40">
-                    Portfolio tracking, Watchlist, Alerts & AI insights yahan aayenge.
+                    Portfolio tracking, watchlist, alerts, and AI insights will be available soon.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 p-5">
                   <p className="text-xs text-white/50">
-                    Tip: Coins pe click karke detailed analytics open kar sakta hai.
+                    Tip: Click on any coin to view detailed analytics.
                   </p>
                 </div>
               </div>
