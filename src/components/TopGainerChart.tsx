@@ -4,9 +4,9 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
 // ===============================
-// 📊 TradingView Chart
+// 📊 TradingView Chart (FIXED)
 // ===============================
-function TradingViewChart({ symbol = 'BTCUSDT' }) {
+function TradingViewChart({ symbol = 'BTCUSDT' }: { symbol: string }) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,16 +19,14 @@ function TradingViewChart({ symbol = 'BTCUSDT' }) {
     script.async = true;
 
     script.onload = () => {
-      // @ts-ignore
+      //@ts-ignore
       new window.TradingView.widget({
         container_id: container.current.id,
-        symbol: symbol,
+        symbol: `BINANCE:${symbol}`, // ✅ FIX
         interval: '60',
         theme: 'dark',
         style: '1',
         locale: 'en',
-        toolbar_bg: '#0f172a',
-        enable_publishing: false,
         width: '100%',
         height: 400,
       });
@@ -45,169 +43,164 @@ function TradingViewChart({ symbol = 'BTCUSDT' }) {
 // ===============================
 export default function TopGainerChart() {
   const [coin, setCoin] = useState<any>(null);
-  const [search, setSearch] = useState('bitcoin');
+  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [search, setSearch] = useState('');
   const [signal, setSignal] = useState('HOLD 🤝');
   const [confidence, setConfidence] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   // ===============================
-  // 📡 FETCH COIN DATA
+  // 🏆 FETCH TOP GAINER (FIXED)
   // ===============================
-  const fetchCoin = async () => {
+  const fetchTopGainer = async () => {
     try {
-      const res = await axios.get(
-        `https://api.coingecko.com/api/v3/coins/${search}`
-      );
-      setCoin(res.data);
+      setLoading(true);
 
-      generateSignal(res.data);
+      const res = await axios.get(
+        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc'
+      );
+
+      const top = res.data[0];
+
+      setCoin(top);
+      setSymbol(top.symbol.toUpperCase() + 'USDT');
+
+      generateSignal(top.id); // ✅ pass correct id
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   // ===============================
-  // 🧠 ULTIMATE AI ENGINE
+  // 🔍 SEARCH COIN (FIXED)
   // ===============================
-  const generateSignal = async (data: any) => {
+  const handleSearch = async () => {
+    if (!search) return;
+
+    try {
+      setLoading(true);
+
+      const res = await axios.get(
+        `https://api.coingecko.com/api/v3/search?query=${search}`
+      );
+
+      if (!res.data.coins.length) return;
+
+      const coinId = res.data.coins[0].id;
+
+      const coinRes = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${coinId}`
+      );
+
+      setCoin(coinRes.data);
+      setSymbol(coinRes.data.symbol.toUpperCase() + 'USDT');
+
+      generateSignal(coinId);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===============================
+  // 🧠 AI SIGNAL ENGINE (OPTIMIZED)
+  // ===============================
+  const generateSignal = async (coinId: string) => {
     try {
       const res = await axios.get(
-        `https://api.coingecko.com/api/v3/coins/${search}/market_chart?vs_currency=usd&days=14`
+        `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=7`
       );
 
       const prices = res.data.prices.map((p: any) => p[1]);
-      const volumes = res.data.total_volumes.map((v: any) => v[1]);
 
       // RSI
-      let gains = 0;
-      let losses = 0;
+      let gains = 0,
+        losses = 0;
+
       for (let i = 1; i < prices.length; i++) {
         const diff = prices[i] - prices[i - 1];
         if (diff > 0) gains += diff;
         else losses -= diff;
       }
-      const avgGain = gains / prices.length;
-      const avgLoss = losses / prices.length || 1;
-      const rs = avgGain / avgLoss;
+
+      const rs = gains / (losses || 1);
       const rsi = 100 - 100 / (1 + rs);
 
       // EMA
       const ema = (period: number) => {
         const k = 2 / (period + 1);
-        let emaVal = prices[0];
+        let val = prices[0];
         for (let i = 1; i < prices.length; i++) {
-          emaVal = prices[i] * k + emaVal * (1 - k);
+          val = prices[i] * k + val * (1 - k);
         }
-        return emaVal;
+        return val;
       };
 
       const ema9 = ema(9);
       const ema21 = ema(21);
 
-      // MACD
-      const macd = ema9 - ema21;
-
-      // Volume
-      const recentVol = volumes[volumes.length - 1];
-      const avgVol =
-        volumes.reduce((a: number, b: number) => a + b, 0) /
-        volumes.length;
-      const volumeSpike = recentVol > avgVol * 1.7;
-
       // Momentum
       const momentum =
-        ((prices[prices.length - 1] - prices[prices.length - 10]) /
-          prices[prices.length - 10]) *
-        100;
+        ((prices.at(-1) - prices.at(-5)) / prices.at(-5)) * 100;
 
-      // Volatility
-      const mean =
-        prices.reduce((a: number, b: number) => a + b, 0) /
-        prices.length;
-
-      const variance =
-        prices.reduce(
-          (a: number, b: number) => a + Math.pow(b - mean, 2),
-          0
-        ) / prices.length;
-
-      const volatility = Math.sqrt(variance);
-
-      // ============================
-      // 🧠 SCORING SYSTEM
-      // ============================
+      // Score
       let score = 0;
 
       if (rsi < 30) score += 2;
-      else if (rsi < 40) score += 1;
-      else if (rsi > 70) score -= 2;
-      else if (rsi > 60) score -= 1;
+      if (rsi > 70) score -= 2;
 
       if (ema9 > ema21) score += 2;
       else score -= 2;
 
-      if (macd > 0) score += 1;
-      else score -= 1;
+      if (momentum > 3) score += 2;
+      if (momentum < -3) score -= 2;
 
-      if (momentum > 5) score += 2;
-      else if (momentum > 2) score += 1;
-      else if (momentum < -5) score -= 2;
-      else if (momentum < -2) score -= 1;
+      // Final
+      if (score >= 4) setSignal('BUY 🟢');
+      else if (score <= -4) setSignal('SELL 🔴');
+      else setSignal('HOLD 🤝');
 
-      if (volumeSpike) score += 2;
-
-      if (volatility > mean * 0.05) score -= 1;
-
-      // ============================
-      // 🎯 FINAL OUTPUT
-      // ============================
-      if (score >= 6) {
-        setSignal('ULTRA BUY 🚀🔥');
-      } else if (score >= 3) {
-        setSignal('BUY 🟢');
-      } else if (score <= -6) {
-        setSignal('ULTRA SELL 🔻🔥');
-      } else if (score <= -3) {
-        setSignal('SELL 🔴');
-      } else {
-        setSignal('HOLD 🤝');
-      }
-
-      setConfidence(Math.min(100, Math.abs(score) * 15));
+      setConfidence(Math.min(100, Math.abs(score) * 20));
     } catch (err) {
       console.log(err);
     }
   };
 
   // ===============================
-  // ⚡ AUTO REFRESH
+  // ⚡ INITIAL LOAD ONLY (FIXED)
   // ===============================
   useEffect(() => {
-    fetchCoin();
-
-    const interval = setInterval(() => {
-      fetchCoin();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [search]);
+    fetchTopGainer();
+  }, []);
 
   return (
     <div className="p-6 bg-black text-white rounded-2xl space-y-4">
       {/* 🔍 Search */}
-      <input
-        type="text"
-        placeholder="Search coin..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value.toLowerCase())}
-        className="p-2 rounded bg-gray-800 w-full"
-      />
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Search coin..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="p-2 rounded bg-gray-800 w-full"
+        />
+        <button
+          onClick={handleSearch}
+          className="px-4 bg-blue-600 rounded"
+        >
+          Search
+        </button>
+      </div>
 
       {/* 📊 Info */}
-      {coin && (
+      {coin && !loading && (
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold">{coin.name}</h2>
-            <p>💰 ${coin.market_data.current_price.usd}</p>
+            <p>💰 ${coin.current_price || coin.market_data?.current_price?.usd}</p>
           </div>
 
           <div className="text-right">
@@ -221,13 +214,7 @@ export default function TopGainerChart() {
       )}
 
       {/* 📊 Chart */}
-      <TradingViewChart
-        symbol={
-          coin?.symbol
-            ? coin.symbol.toUpperCase() + 'USDT'
-            : 'BTCUSDT'
-        }
-      />
+      <TradingViewChart symbol={symbol} />
     </div>
   );
 }
