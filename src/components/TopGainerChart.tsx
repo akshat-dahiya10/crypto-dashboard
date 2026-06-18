@@ -21,8 +21,8 @@ function TradingViewChart({ symbol = 'BTCUSDT' }: { symbol: string }) {
     script.onload = () => {
       //@ts-ignore
       new window.TradingView.widget({
-        container_id: container.current.id,
-        symbol: `BINANCE:${symbol}`, // ✅ FIX
+        container_id: 'tv_chart_container', // ✅ FIXED
+        symbol: `BINANCE:${symbol}`,
         interval: '60',
         theme: 'dark',
         style: '1',
@@ -35,7 +35,7 @@ function TradingViewChart({ symbol = 'BTCUSDT' }: { symbol: string }) {
     container.current.appendChild(script);
   }, [symbol]);
 
-  return <div id="tradingview_chart" ref={container} />;
+  return <div id="tv_chart_container" ref={container} />;
 }
 
 // ===============================
@@ -50,7 +50,7 @@ export default function TopGainerChart() {
   const [loading, setLoading] = useState(true);
 
   // ===============================
-  // 🏆 FETCH TOP GAINER (FIXED)
+  // 🏆 FETCH TOP GAINER
   // ===============================
   const fetchTopGainer = async () => {
     try {
@@ -65,7 +65,7 @@ export default function TopGainerChart() {
       setCoin(top);
       setSymbol(top.symbol.toUpperCase() + 'USDT');
 
-      generateSignal(top.id); // ✅ pass correct id
+      generateSignal(top.id);
     } catch (err) {
       console.log(err);
     } finally {
@@ -74,7 +74,7 @@ export default function TopGainerChart() {
   };
 
   // ===============================
-  // 🔍 SEARCH COIN (FIXED)
+  // 🔍 SEARCH COIN
   // ===============================
   const handleSearch = async () => {
     if (!search) return;
@@ -106,7 +106,7 @@ export default function TopGainerChart() {
   };
 
   // ===============================
-  // 🧠 AI SIGNAL ENGINE (OPTIMIZED)
+  // 🧠 AI SIGNAL ENGINE
   // ===============================
   const generateSignal = async (coinId: string) => {
     try {
@@ -116,9 +116,11 @@ export default function TopGainerChart() {
 
       const prices = res.data.prices.map((p: any) => p[1]);
 
+      if (prices.length < 6) return;
+
       // RSI
-      let gains = 0,
-        losses = 0;
+      let gains = 0;
+      let losses = 0;
 
       for (let i = 1; i < prices.length; i++) {
         const diff = prices[i] - prices[i - 1];
@@ -142,11 +144,12 @@ export default function TopGainerChart() {
       const ema9 = ema(9);
       const ema21 = ema(21);
 
-      // Momentum
-      const momentum =
-        ((prices.at(-1) - prices.at(-5)) / prices.at(-5)) * 100;
+      // ✅ MOMENTUM FIX (NO .at)
+      const last = prices[prices.length - 1];
+      const prev = prices[prices.length - 5];
+      const momentum = ((last - prev) / prev) * 100;
 
-      // Score
+      // SCORE
       let score = 0;
 
       if (rsi < 30) score += 2;
@@ -158,7 +161,7 @@ export default function TopGainerChart() {
       if (momentum > 3) score += 2;
       if (momentum < -3) score -= 2;
 
-      // Final
+      // FINAL
       if (score >= 4) setSignal('BUY 🟢');
       else if (score <= -4) setSignal('SELL 🔴');
       else setSignal('HOLD 🤝');
@@ -170,11 +173,17 @@ export default function TopGainerChart() {
   };
 
   // ===============================
-  // ⚡ INITIAL LOAD ONLY (FIXED)
+  // ⚡ INITIAL LOAD
   // ===============================
   useEffect(() => {
     fetchTopGainer();
   }, []);
+
+  // ✅ SAFE PRICE FIX
+  const price =
+    coin?.current_price ??
+    coin?.market_data?.current_price?.usd ??
+    0;
 
   return (
     <div className="p-6 bg-black text-white rounded-2xl space-y-4">
@@ -200,7 +209,7 @@ export default function TopGainerChart() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold">{coin.name}</h2>
-            <p>💰 ${coin.current_price || coin.market_data?.current_price?.usd}</p>
+            <p>💰 ${price}</p>
           </div>
 
           <div className="text-right">
