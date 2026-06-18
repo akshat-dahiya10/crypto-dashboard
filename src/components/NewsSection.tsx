@@ -9,20 +9,14 @@ export default function NewsSection() {
   const fetchNews = async () => {
     try {
       const res = await fetch(
-        'https://api.allorigins.win/get?url=https://cointelegraph.com/rss'
+        'https://api.rss2json.com/v1/api.json?rss_url=https://cointelegraph.com/rss'
       );
 
       const data = await res.json();
 
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(data.contents, 'text/xml');
+      if (data.status !== 'ok') throw new Error('API failed');
 
-      const items = Array.from(xml.querySelectorAll('item')).map((item) => ({
-        title: item.querySelector('title')?.textContent,
-        link: item.querySelector('link')?.textContent,
-      }));
-
-      setNews(items);
+      setNews(data.items || []);
     } catch (err) {
       console.log(err);
       setError(true);
@@ -34,7 +28,11 @@ export default function NewsSection() {
   }, []);
 
   if (error) {
-    return <p className="text-red-400">❌ Unable to load news</p>;
+    return (
+      <p className="text-red-400">
+        ❌ Unable to load news
+      </p>
+    );
   }
 
   return (
