@@ -1,10 +1,22 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
 
 // ===============================
-// 📊 TradingView Chart (FIXED)
+// 🔥 SYMBOL MAP (FIX FOR XLM ETC)
+// ===============================
+const symbolMap: Record<string, string> = {
+  bitcoin: 'BTCUSDT',
+  ethereum: 'ETHUSDT',
+  ripple: 'XRPUSDT',
+  solana: 'SOLUSDT',
+  cardano: 'ADAUSDT',
+  dogecoin: 'DOGEUSDT',
+  stellar: 'XLMUSDT',
+};
+
+// ===============================
+// 📊 TradingView Chart
 // ===============================
 function TradingViewChart({ symbol = 'BTCUSDT' }: { symbol: string }) {
   const container = useRef<HTMLDivElement>(null);
@@ -21,7 +33,7 @@ function TradingViewChart({ symbol = 'BTCUSDT' }: { symbol: string }) {
     script.onload = () => {
       //@ts-ignore
       new window.TradingView.widget({
-        container_id: 'tv_chart_container', // ✅ FIXED
+        container_id: 'tv_chart_container',
         symbol: `BINANCE:${symbol}`,
         interval: '60',
         theme: 'dark',
@@ -56,14 +68,20 @@ export default function TopGainerChart() {
     try {
       setLoading(true);
 
-      const res = await axios.get(
+      const res = await fetch(
         'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=percent_change_24h_desc'
       );
 
-      const top = res.data[0];
+      const data = await res.json();
+      const top = data[0];
 
       setCoin(top);
-      setSymbol(top.symbol.toUpperCase() + 'USDT');
+
+      const mappedSymbol =
+        symbolMap[top.id] ||
+        top.symbol.toUpperCase() + 'USDT';
+
+      setSymbol(mappedSymbol);
 
       generateSignal(top.id);
     } catch (err) {
@@ -82,20 +100,29 @@ export default function TopGainerChart() {
     try {
       setLoading(true);
 
-      const res = await axios.get(
+      const res = await fetch(
         `https://api.coingecko.com/api/v3/search?query=${search}`
       );
 
-      if (!res.data.coins.length) return;
+      const data = await res.json();
 
-      const coinId = res.data.coins[0].id;
+      if (!data.coins.length) return;
 
-      const coinRes = await axios.get(
+      const coinId = data.coins[0].id;
+
+      const coinRes = await fetch(
         `https://api.coingecko.com/api/v3/coins/${coinId}`
       );
 
-      setCoin(coinRes.data);
-      setSymbol(coinRes.data.symbol.toUpperCase() + 'USDT');
+      const coinData = await coinRes.json();
+
+      setCoin(coinData);
+
+      const mappedSymbol =
+        symbolMap[coinData.id] ||
+        coinData.symbol.toUpperCase() + 'USDT';
+
+      setSymbol(mappedSymbol);
 
       generateSignal(coinId);
     } catch (err) {
@@ -110,15 +137,15 @@ export default function TopGainerChart() {
   // ===============================
   const generateSignal = async (coinId: string) => {
     try {
-      const res = await axios.get(
+      const res = await fetch(
         `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=7`
       );
 
-      const prices = res.data.prices.map((p: any) => p[1]);
+      const data = await res.json();
+      const prices = data.prices.map((p: any) => p[1]);
 
       if (prices.length < 6) return;
 
-      // RSI
       let gains = 0;
       let losses = 0;
 
@@ -131,7 +158,6 @@ export default function TopGainerChart() {
       const rs = gains / (losses || 1);
       const rsi = 100 - 100 / (1 + rs);
 
-      // EMA
       const ema = (period: number) => {
         const k = 2 / (period + 1);
         let val = prices[0];
@@ -144,12 +170,11 @@ export default function TopGainerChart() {
       const ema9 = ema(9);
       const ema21 = ema(21);
 
-      // ✅ MOMENTUM FIX (NO .at)
+      // ✅ FIXED MOMENTUM
       const last = prices[prices.length - 1];
       const prev = prices[prices.length - 5];
       const momentum = ((last - prev) / prev) * 100;
 
-      // SCORE
       let score = 0;
 
       if (rsi < 30) score += 2;
@@ -161,7 +186,6 @@ export default function TopGainerChart() {
       if (momentum > 3) score += 2;
       if (momentum < -3) score -= 2;
 
-      // FINAL
       if (score >= 4) setSignal('BUY 🟢');
       else if (score <= -4) setSignal('SELL 🔴');
       else setSignal('HOLD 🤝');
@@ -179,7 +203,7 @@ export default function TopGainerChart() {
     fetchTopGainer();
   }, []);
 
-  // ✅ SAFE PRICE FIX
+  // ✅ SAFE PRICE
   const price =
     coin?.current_price ??
     coin?.market_data?.current_price?.usd ??
